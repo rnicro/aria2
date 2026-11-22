@@ -23,8 +23,10 @@ grep -Fq -- '--without-gnutls' "$template"
 grep -Fq -- '--enable-libaria2' "$template"
 grep -Fq 'archs="x86_64-musl"' "$template"
 grep -Fq 'lib32disabled=yes' "$template"
-grep -Fq 'CFLAGS+=" -march=skylake -mtune=skylake"' "$template"
-grep -Fq 'CXXFLAGS+=" -march=skylake -mtune=skylake"' "$template"
+grep -Fq 'CFLAGS+=" -O2 -march=skylake -mtune=skylake -fno-plt"' "$template"
+grep -Fq 'CXXFLAGS+=" -O2 -march=skylake -mtune=skylake -fno-plt"' "$template"
+[ -s "examples/hp-pavilion-hdd-ext4.conf" ]
+grep -Fq 'file-allocation=falloc' examples/hp-pavilion-hdd-ext4.conf
 grep -Fq 'c-ares-devel expat-devel gmp-devel openssl-devel sqlite-devel' "$template"
 grep -Fq 'zlib-devel' "$template"
 grep -Fq 'libaria2_package()' "$template"
@@ -50,4 +52,4 @@ esac
 
 grep -Fq 'pkgname="release"' "$update"
 
-echo "aria2 x86_64-musl / Skylake template checks passed"
+echo "aria2 x86_64-musl / Skylake and HDD/ext4 profile checks passed"

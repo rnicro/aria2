@@ -61,7 +61,8 @@ jobs:
             echo
             echo "- Void Linux: x86_64-musl"
             echo "- CPU: Intel Skylake / Core i3-6100U"
-            echo "- C and C++ flags: -march=skylake -mtune=skylake"
+            echo "- C and C++ flags: -O2 -march=skylake -mtune=skylake -fno-plt"
+            echo "- Optional runtime profile: ext4 HDD file-allocation=falloc"
             echo "- TLS: OpenSSL (GnuTLS disabled)"
             echo "- Build host: GitHub-hosted runner (not the target CPU)"
           } >> "$GITHUB_STEP_SUMMARY"

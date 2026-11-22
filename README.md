@@ -8,8 +8,12 @@ This repository packages upstream aria2; it does not fork or patch the applicati
 
 - Distribution: Void Linux
 - XBPS target: `x86_64-musl` only
-- CPU target: Intel Skylake (`-march=skylake -mtune=skylake`)
+- Laptop reference: HP Pavilion x360 Convertible T0Y58PA
+- CPU target: Intel Skylake (`-O2 -march=skylake -mtune=skylake -fno-plt`)
 - Reference CPU: Intel Core i3-6100U (2 cores / 4 threads)
+- Graphics: Intel HD Graphics 520 (not used by aria2)
+- Storage: SATA HDD with ext4
+- Network: Intel Wireless 3165 / Realtek RTL810xE Ethernet
 - C library: musl
 - Build system: GNU Autotools / `gnu-configure`
 
@@ -25,29 +29,41 @@ The package recipe follows Void Linux's [aria2 template](https://github.com/void
 - Source archive: `https://github.com/aria2/aria2/releases/download/release-1.37.0/aria2-1.37.0.tar.xz`
 - SHA-256: `60a420ad7085eb616cb6e2bdf0a7206d68ff3d37fb5a956dc44242eb2f79b66b`
 - Build style: GNU configure
-- CPU tuning: `-march=skylake -mtune=skylake` for both C and C++
+- CPU tuning: `-O2 -march=skylake -mtune=skylake -fno-plt` for both C and C++
 - TLS: OpenSSL; GnuTLS is disabled
 - Runtime dependencies: CA certificates
 - Build dependencies: c-ares, Expat, GMP, OpenSSL, SQLite, and zlib
 
 The Void dependency set enables aria2's normal HTTP/FTP and BitTorrent/Metalink capabilities, asynchronous DNS, TLS, XML/Metalink parsing, and session database support where detected by the upstream configure checks. The package retains Void's `libaria2` runtime and `libaria2-devel` subpackages.
 
-Void supplies the normal release optimization flags; this repository adds only the Skylake CPU target. It deliberately does not use `-march=native`, because the CI runner is not the target device. LTO and PGO are not enabled by this recipe. No runtime speedup is claimed without benchmarking on the actual i3-6100U.
+The build keeps Void's hardening flags and `-O2`, then selects the i3-6100U's Skylake instruction set and tuning model for both C and C++. `-fno-plt` is added consistently with the other rnicro native-package builds. The recipe deliberately avoids `-O3`, `-march=native`, LTO, and PGO: higher optimization levels and whole-program optimization can increase code size or build complexity, and no target-device benchmark currently demonstrates a benefit for aria2's network- and storage-heavy workload. The CI runner is not used to select the target CPU.
+
+### HDD / ext4 runtime profile
+
+The laptop reference system uses a SATA hard drive and ext4. For downloads stored on that ext4 filesystem, aria2's upstream manual recommends `falloc` allocation because ext4 supports extent allocation and large files can be allocated quickly. This is a runtime setting, not a compiler optimization. The optional profile retains aria2's normal 16 MiB disk cache rather than increasing memory use:
+
+```sh
+mkdir -p ~/.config/aria2
+cp examples/hp-pavilion-hdd-ext4.conf ~/.config/aria2/aria2.conf
+aria2c --conf-path=~/.config/aria2/aria2.conf
+```
+
+Use this profile only when the download destination is on ext4. Keep your existing configuration and add `file-allocation=falloc` manually rather than overwriting it. On other filesystems, retain aria2's default allocation method unless you have verified support.
 
 ## Install a release
 
-Successful builds from `main` publish an immutable, versioned GitHub Release. The tag format is `<version>_<revision>` (initially `1.37.0_1`). The release contains these installable packages:
+Successful builds from `main` publish an immutable, versioned GitHub Release. The tag format is `<version>_<revision>` (current package: `1.37.0_2`). The release contains these installable packages:
 
 ```text
-aria2-1.37.0_1.x86_64-musl.xbps
-libaria2-1.37.0_1.x86_64-musl.xbps
-libaria2-devel-1.37.0_1.x86_64-musl.xbps
+aria2-1.37.0_2.x86_64-musl.xbps
+libaria2-1.37.0_2.x86_64-musl.xbps
+libaria2-devel-1.37.0_2.x86_64-musl.xbps
 ```
 
 Download the `aria2` and `libaria2` packages from the same release and install them locally:
 
 ```sh
-sudo xbps-install ./aria2-1.37.0_1.x86_64-musl.xbps ./libaria2-1.37.0_1.x86_64-musl.xbps
+sudo xbps-install ./aria2-1.37.0_2.x86_64-musl.xbps ./libaria2-1.37.0_2.x86_64-musl.xbps
 aria2c --version
 ```
 
@@ -88,7 +104,7 @@ When updating aria2:
 
 1. Verify the upstream release and source archive SHA-256.
 2. Update `version` and `checksum` in `srcpkgs/aria2/template`.
-3. Keep revision 1 for the first packaging of a new upstream version; increment it when packaging changes alter the package output.
+3. Start a new upstream version at revision 1; increment the revision whenever a packaging change alters the generated package output.
 4. Re-check Void's aria2 template for dependency, configure-option, or musl changes.
 5. Run the validation checks and confirm `./xbps-src -A x86_64-musl pkg aria2` succeeds.
 6. Benchmark on the reference Skylake CPU before describing a runtime performance improvement.
@@ -97,6 +113,7 @@ When updating aria2:
 
 - [Upstream aria2](https://github.com/aria2/aria2)
 - [aria2 releases](https://github.com/aria2/aria2/releases)
+- [aria2 manual: disk cache and file allocation](https://github.com/aria2/aria2/blob/release-1.37.0/doc/manual-src/en/aria2c.rst)
 - [Void Linux aria2 package](https://github.com/void-linux/void-packages/tree/master/srcpkgs/aria2)
 - [Void Linux XBPS source packages](https://github.com/void-linux/void-packages)
 - [rnicro/tofi](https://github.com/rnicro/tofi), [rnicro/brightnessctl](https://github.com/rnicro/brightnessctl), and [rnicro/velotype](https://github.com/rnicro/velotype), used as examples for Skylake-specific `x86_64-musl` packaging and release workflows.

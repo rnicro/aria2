@@ -1,7 +1,7 @@
 # Template file for 'aria2'
 pkgname=aria2
 version=1.37.0
-revision=1
+revision=2
 build_style=gnu-configure
 configure_args="--with-openssl --with-libexpat --without-gnutls
  --with-ca-bundle=/etc/ssl/certs/ca-certificates.crt
@@ -25,8 +25,8 @@ archs="x86_64-musl"
 lib32disabled=yes
 
 # Target the Intel Core i3-6100U (Skylake), not the CI runner's CPU.
-CFLAGS+=" -march=skylake -mtune=skylake"
-CXXFLAGS+=" -march=skylake -mtune=skylake"
+CFLAGS+=" -O2 -march=skylake -mtune=skylake -fno-plt"
+CXXFLAGS+=" -O2 -march=skylake -mtune=skylake -fno-plt"
 
 libaria2_package() {
 	short_desc="Multi-Protocol/multi-source download library"
