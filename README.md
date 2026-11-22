@@ -31,12 +31,13 @@ The package recipe follows Void Linux's [aria2 template](https://github.com/void
 - Build style: GNU configure
 - CPU tuning: `-O2 -march=skylake -mtune=skylake -fno-plt` for both C and C++
 - TLS: OpenSSL; GnuTLS is disabled
+- Library API: disabled (`--disable-libaria2`); CLI only
 - Runtime dependencies: CA certificates
 - Build dependencies: c-ares, Expat, GMP, OpenSSL, SQLite, and zlib
 
-The Void dependency set enables aria2's normal HTTP/FTP and BitTorrent/Metalink capabilities, asynchronous DNS, TLS, XML/Metalink parsing, and session database support where detected by the upstream configure checks. The package retains Void's `libaria2` runtime and `libaria2-devel` subpackages.
+The Void dependency set enables aria2's normal HTTP/FTP and BitTorrent/Metalink capabilities, asynchronous DNS, TLS, XML/Metalink parsing, and session database support where detected by the upstream configure checks. This is a CLI-only build: `--disable-libaria2` omits the optional shared library API, its development headers, and both separate library packages. The `aria2c` executable is the only packaged aria2 component.
 
-The build keeps Void's hardening flags and `-O2`, then selects the i3-6100U's Skylake instruction set and tuning model for both C and C++. `-fno-plt` is added consistently with the other rnicro native-package builds. The recipe deliberately avoids `-O3`, `-march=native`, LTO, and PGO: higher optimization levels and whole-program optimization can increase code size or build complexity, and no target-device benchmark currently demonstrates a benefit for aria2's network- and storage-heavy workload. The CI runner is not used to select the target CPU.
+The build keeps Void's hardening flags and `-O2`, then selects the i3-6100U's Skylake instruction set and tuning model for both C and C++. `-fno-plt` is added consistently with the other rnicro native-package builds. The optional aria2 library interface is disabled because this repository targets command-line use only. The recipe deliberately avoids `-O3`, `-march=native`, LTO, and PGO: higher optimization levels and whole-program optimization can increase code size or build complexity, and no target-device benchmark currently demonstrates a benefit for aria2's network- and storage-heavy workload. The CI runner is not used to select the target CPU.
 
 ### HDD / ext4 runtime profile
 
@@ -51,22 +52,20 @@ Use this profile only when the download destination is on ext4. It is a separate
 
 ## Install a release
 
-Successful builds from `main` publish an immutable, versioned GitHub Release. The tag format is `<version>_<revision>` (current package: `1.37.0_2`). The release contains these installable packages:
+Successful builds from `main` publish an immutable, versioned GitHub Release. The tag format is `<version>_<revision>` (current package: `1.37.0_3`). The release contains these installable packages:
 
 ```text
-aria2-1.37.0_2.x86_64-musl.xbps
-libaria2-1.37.0_2.x86_64-musl.xbps
-libaria2-devel-1.37.0_2.x86_64-musl.xbps
+aria2-1.37.0_3.x86_64-musl.xbps
 ```
 
-Download the `aria2` and `libaria2` packages from the same release and install them locally:
+Install the single package locally:
 
 ```sh
-sudo xbps-install ./aria2-1.37.0_2.x86_64-musl.xbps ./libaria2-1.37.0_2.x86_64-musl.xbps
+sudo xbps-install ./aria2-1.37.0_3.x86_64-musl.xbps
 aria2c --version
 ```
 
-The `libaria2-devel` package is only needed when compiling software against the aria2 library. Download packages from [GitHub Releases](https://github.com/rnicro/aria2/releases).
+This build is intentionally for `aria2c` users and does not include the optional library API. Earlier releases retain their historical split-package assets; use the newest release for the single-package CLI build. Download it from [GitHub Releases](https://github.com/rnicro/aria2/releases).
 
 These are standalone XBPS package files, not a signed, indexed XBPS repository. The package is not intended for older CPUs or glibc systems.
 

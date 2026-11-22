@@ -30,16 +30,12 @@ expected_tag="${VERSION}_${REVISION}"
     exit 1
 }
 
-set --
-for package in aria2 libaria2 libaria2-devel; do
-    package_name="${package}-${VERSION}_${REVISION}.x86_64-musl.xbps"
-    package_path="$dist/$package_name"
-    [ -s "$package_path" ] || {
-        echo "Expected package was not found: $package_path" >&2
-        exit 1
-    }
-    set -- "$@" "$package_path"
-done
+package_name="aria2-${VERSION}_${REVISION}.x86_64-musl.xbps"
+package_path="$dist/$package_name"
+[ -s "$package_path" ] || {
+    echo "Expected package was not found: $package_path" >&2
+    exit 1
+}
 
 notes="Automated Void Linux XBPS package release for aria2 ${VERSION} (revision ${REVISION}).
 
@@ -52,25 +48,23 @@ Packaging:
 - Upstream source: https://github.com/aria2/aria2
 - Void Linux recipe baseline: https://github.com/void-linux/void-packages/tree/master/srcpkgs/aria2
 - TLS backend: OpenSSL; GnuTLS disabled
-- Package assets: aria2, libaria2, libaria2-devel
+- CLI-only build: optional libaria2 shared-library API disabled
+- Package asset: $package_name
 
 These are standalone XBPS package files, not a signed, indexed XBPS repository. The packages are not intended for pre-Skylake CPUs, glibc systems, or other architectures."
 
 if gh release view "$TAG" --repo "$GH_REPO" >/dev/null 2>&1; then
     tmp="$(mktemp -d)"
     trap 'rm -rf "$tmp"' EXIT HUP INT TERM
-    for package in aria2 libaria2 libaria2-devel; do
-        package_name="${package}-${VERSION}_${REVISION}.x86_64-musl.xbps"
-        if ! gh release download "$TAG" --repo "$GH_REPO" --pattern "$package_name" --dir "$tmp"; then
-            echo "Release $TAG exists but $package_name could not be downloaded; refusing to modify it." >&2
-            exit 1
-        fi
-        if [ ! -s "$tmp/$package_name" ] || ! cmp -s "$dist/$package_name" "$tmp/$package_name"; then
-            echo "Release $TAG already contains different bytes for $package_name." >&2
-            echo "Increment revision in srcpkgs/aria2/template before publishing changed output." >&2
-            exit 1
-        fi
-    done
+    if ! gh release download "$TAG" --repo "$GH_REPO" --pattern "$package_name" --dir "$tmp"; then
+        echo "Release $TAG exists but $package_name could not be downloaded; refusing to modify it." >&2
+        exit 1
+    fi
+    if [ ! -s "$tmp/$package_name" ] || ! cmp -s "$package_path" "$tmp/$package_name"; then
+        echo "Release $TAG already contains different bytes for $package_name." >&2
+        echo "Increment revision in srcpkgs/aria2/template before publishing changed output." >&2
+        exit 1
+    fi
     echo "Release $TAG already contains identical packages."
 else
     gh release create "$TAG" "$@" --repo "$GH_REPO" \
@@ -84,5 +78,5 @@ release_url="$(gh release view "$TAG" --repo "$GH_REPO" --json url --jq .url)"
     echo
     echo "- Release: [$TAG]($release_url)"
     echo "- Target: x86_64-musl / Intel Skylake"
-    echo "- Packages: aria2, libaria2, libaria2-devel"
+    echo "- Package: $package_name (CLI only)"
 } >> "${GITHUB_STEP_SUMMARY:-/dev/null}"

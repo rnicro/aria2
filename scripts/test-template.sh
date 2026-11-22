@@ -20,7 +20,7 @@ grep -Fq 'build_style=gnu-configure' "$template"
 grep -Fq -- '--with-openssl' "$template"
 grep -Fq -- '--with-libexpat' "$template"
 grep -Fq -- '--without-gnutls' "$template"
-grep -Fq -- '--enable-libaria2' "$template"
+grep -Fq -- '--disable-libaria2' "$template"
 grep -Fq 'archs="x86_64-musl"' "$template"
 grep -Fq 'lib32disabled=yes' "$template"
 grep -Fq 'CFLAGS+=" -O2 -march=skylake -mtune=skylake -fno-plt"' "$template"
@@ -29,8 +29,10 @@ grep -Fq 'CXXFLAGS+=" -O2 -march=skylake -mtune=skylake -fno-plt"' "$template"
 grep -Fq 'file-allocation=falloc' examples/hp-pavilion-hdd-ext4.conf
 grep -Fq 'c-ares-devel expat-devel gmp-devel openssl-devel sqlite-devel' "$template"
 grep -Fq 'zlib-devel' "$template"
-grep -Fq 'libaria2_package()' "$template"
-grep -Fq 'libaria2-devel_package()' "$template"
+if grep -Eq '^(libaria2|libaria2-devel)_package\(\)' "$template"; then
+    echo "CLI-only package must not emit separate libaria2 subpackages." >&2
+    exit 1
+fi
 grep -Fq 'releases/download/release-' "$template"
 
 if grep -Eq 'march=native|mtune=native|x86_64-glibc|x86_64$' "$template"; then
@@ -52,4 +54,4 @@ esac
 
 grep -Fq 'pkgname="release"' "$update"
 
-echo "aria2 x86_64-musl / Skylake and HDD/ext4 profile checks passed"
+echo "aria2 CLI-only x86_64-musl / Skylake and HDD/ext4 checks passed"

@@ -1,12 +1,12 @@
 # Template file for 'aria2'
 pkgname=aria2
 version=1.37.0
-revision=2
+revision=3
 build_style=gnu-configure
 configure_args="--with-openssl --with-libexpat --without-gnutls
  --with-ca-bundle=/etc/ssl/certs/ca-certificates.crt
  --with-bashcompletiondir=/usr/share/bash-completion/completions
- --enable-libaria2"
+ --disable-libaria2"
 hostmakedepends="pkg-config"
 makedepends="c-ares-devel expat-devel gmp-devel openssl-devel sqlite-devel
  zlib-devel"
@@ -27,21 +27,3 @@ lib32disabled=yes
 # Target the Intel Core i3-6100U (Skylake), not the CI runner's CPU.
 CFLAGS+=" -O2 -march=skylake -mtune=skylake -fno-plt"
 CXXFLAGS+=" -O2 -march=skylake -mtune=skylake -fno-plt"
-
-libaria2_package() {
-	short_desc="Multi-Protocol/multi-source download library"
-	pkg_install() {
-		vmove "usr/lib/libaria2.so.*"
-	}
-}
-
-libaria2-devel_package() {
-	short_desc="Multi-Protocol/multi-source download library - development files"
-	depends="libaria2>=${version}_${revision} ${makedepends}"
-	pkg_install() {
-		vmove usr/include
-		vmove "usr/lib/*.la"
-		vmove "usr/lib/*.so"
-		vmove usr/lib/pkgconfig
-	}
-}

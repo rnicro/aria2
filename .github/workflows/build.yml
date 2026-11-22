@@ -62,6 +62,7 @@ jobs:
             echo "- Void Linux: x86_64-musl"
             echo "- CPU: Intel Skylake / Core i3-6100U"
             echo "- C and C++ flags: -O2 -march=skylake -mtune=skylake -fno-plt"
+            echo "- CLI-only: optional libaria2 shared-library API disabled"
             echo "- Optional runtime profile: ext4 HDD file-allocation=falloc"
             echo "- TLS: OpenSSL (GnuTLS disabled)"
             echo "- Build host: GitHub-hosted runner (not the target CPU)"
@@ -108,16 +109,18 @@ jobs:
           set -euo pipefail
           ./xbps-src -A "$XBPS_TARGET_ARCH" pkg aria2
           mkdir -p "$GITHUB_WORKSPACE/dist"
-          for package in aria2 libaria2 libaria2-devel; do
-            package_name="${package}-${{ steps.meta.outputs.version }}_${{ steps.meta.outputs.revision }}.x86_64-musl.xbps"
-            mapfile -t packages < <(find hostdir/binpkgs -type f -name "$package_name" -print)
-            if [[ "${#packages[@]}" -ne 1 ]]; then
-              printf 'Expected exactly one %s package, found %s\n' "$package_name" "${#packages[@]}" >&2
-              find hostdir/binpkgs -type f -name '*aria2*.xbps' -print >&2
-              exit 1
-            fi
-            cp "${packages[0]}" "$GITHUB_WORKSPACE/dist/"
-          done
+          package_name="aria2-${{ steps.meta.outputs.version }}_${{ steps.meta.outputs.revision }}.x86_64-musl.xbps"
+          mapfile -t packages < <(find hostdir/binpkgs -type f -name "$package_name" -print)
+          if [[ "${#packages[@]}" -ne 1 ]]; then
+            printf 'Expected exactly one aria2 package, found %s\\n' "${#packages[@]}" >&2
+            find hostdir/binpkgs -type f -name '*aria2*.xbps' -print >&2
+            exit 1
+          fi
+          if find hostdir/binpkgs -type f \\( -name 'libaria2-*.xbps' -o -name 'libaria2-devel-*.xbps' \\) -print | grep -q .; then
+            echo "Unexpected separate libaria2 subpackage generated." >&2
+            exit 1
+          fi
+          cp "${packages[0]}" "$GITHUB_WORKSPACE/dist/"
           for package_path in "$GITHUB_WORKSPACE"/dist/*.xbps; do
             printf -- '- **%s:** %s bytes (%s)\n' \
               "$(basename "$package_path")" "$(stat -c '%s' "$package_path")" "$(du -h "$package_path" | cut -f1)" \
