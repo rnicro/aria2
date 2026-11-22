@@ -43,12 +43,11 @@ The build keeps Void's hardening flags and `-O2`, then selects the i3-6100U's Sk
 The laptop reference system uses a SATA hard drive and ext4. For downloads stored on that ext4 filesystem, aria2's upstream manual recommends `falloc` allocation because ext4 supports extent allocation and large files can be allocated quickly. This is a runtime setting, not a compiler optimization. The optional profile retains aria2's normal 16 MiB disk cache rather than increasing memory use:
 
 ```sh
-mkdir -p ~/.config/aria2
-cp examples/hp-pavilion-hdd-ext4.conf ~/.config/aria2/aria2.conf
-aria2c --conf-path=~/.config/aria2/aria2.conf
+install -Dm644 examples/hp-pavilion-hdd-ext4.conf "$HOME/.config/aria2/aria-hdd-ext4.conf"
+aria2c --conf-path="$HOME/.config/aria2/aria-hdd-ext4.conf"
 ```
 
-Use this profile only when the download destination is on ext4. Keep your existing configuration and add `file-allocation=falloc` manually rather than overwriting it. On other filesystems, retain aria2's default allocation method unless you have verified support.
+Use this profile only when the download destination is on ext4. It is a separate file and does not overwrite your normal aria2 configuration. On other filesystems, retain aria2's default allocation method unless you have verified support.
 
 ## Install a release
 
