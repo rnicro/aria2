@@ -67,7 +67,7 @@ if gh release view "$TAG" --repo "$GH_REPO" >/dev/null 2>&1; then
     fi
     echo "Release $TAG already contains identical packages."
 else
-    gh release create "$TAG" "$@" --repo "$GH_REPO" \
+    gh release create "$TAG" "$package_path" --repo "$GH_REPO" \
         --title "aria2 ${VERSION}-${REVISION} (x86_64-musl / Skylake)" \
         --notes "$notes" --target "$RELEASE_COMMIT"
 fi

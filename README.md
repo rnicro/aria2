@@ -52,7 +52,7 @@ Use this profile only when the download destination is on ext4. It is a separate
 
 ## Install a release
 
-Successful builds from `main` publish an immutable, versioned GitHub Release. The tag format is `<version>_<revision>` (current package: `1.37.0_3`). The release contains these installable packages:
+Successful builds from `main` publish an immutable, versioned GitHub Release. The tag format is `<version>_<revision>` (current package: `1.37.0_3`). The release contains one installable package:
 
 ```text
 aria2-1.37.0_3.x86_64-musl.xbps

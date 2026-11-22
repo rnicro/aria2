@@ -112,11 +112,11 @@ jobs:
           package_name="aria2-${{ steps.meta.outputs.version }}_${{ steps.meta.outputs.revision }}.x86_64-musl.xbps"
           mapfile -t packages < <(find hostdir/binpkgs -type f -name "$package_name" -print)
           if [[ "${#packages[@]}" -ne 1 ]]; then
-            printf 'Expected exactly one aria2 package, found %s\\n' "${#packages[@]}" >&2
+            printf 'Expected exactly one aria2 package, found %s\n' "${#packages[@]}" >&2
             find hostdir/binpkgs -type f -name '*aria2*.xbps' -print >&2
             exit 1
           fi
-          if find hostdir/binpkgs -type f \\( -name 'libaria2-*.xbps' -o -name 'libaria2-devel-*.xbps' \\) -print | grep -q .; then
+          if find hostdir/binpkgs -type f \( -name 'libaria2-*.xbps' -o -name 'libaria2-devel-*.xbps' \) -print | grep -q .; then
             echo "Unexpected separate libaria2 subpackage generated." >&2
             exit 1
           fi
